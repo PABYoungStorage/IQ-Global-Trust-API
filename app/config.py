@@ -3,7 +3,8 @@ SECRET_KEY = 'dev'
 DEBUG = True
 
 # MongoDB Configuration
-MONGO_URI = 'mongodb://trustadmin:dotmail123@mongodb.youngstorage.in:27017/?authSource=trust'
+# MONGO_URI = 'mongodb://trustadmin:dotmail123@mongodb.youngstorage.in:27017/?authSource=trust'
+MONGO_URI = 'mongodb://root:example@localhost:27017'
 MONGO_DBNAME = 'trust'
 
 # Email Configuration
@@ -15,8 +16,9 @@ MAIL_PASSWORD = 'flora63@mcdaniel'
 MAIL_DEFAULT_SENDER = 'flora63mcdaniel@outlook.com'
 
 # Admin Credentials
-ADMIN_USER = 'trustadmin'
-ADMIN_PASSWORD = 'dotmail123'
+ADMIN_USER = 'admin'
+ADMIN_PASSWORD = 'admin'
+SESSION_ID = 'dev'
 
 # Image Config
 UPLOAD_FOLDER = '/home/bhadri/project/global_trust_api/app/public'

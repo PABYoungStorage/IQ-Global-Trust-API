@@ -10,26 +10,38 @@ import time
 auth_routes = Blueprint('auth', __name__, url_prefix='/auth')
 
 
+@auth_routes.get("/usercheck")
+def UserCheck():
+    try:
+        id = request.args.get("id")
+        if current_app.config["SESSION_ID"] == id:
+            return jsonify({"message": "userVerified", "status": True}), 200
+        else:
+            return jsonify({"message": "Please Login And Continue", "status": False}), 401
+    except Exception as e:
+        return jsonify({'message': str(e), "status": False}), 401
+
+ 
 @auth_routes.post('/signin')
 def signin():
     try:
-        data = request.get_json()
+        data = request.json
         admin_name = current_app.config['ADMIN_USER']
         admin_pwd = current_app.config['ADMIN_PASSWORD']
 
         username = data.get('username')
         password = data.get('password')
+
         if username == admin_name and password == admin_pwd:
-            session['user'] = username
-            return {"message": "Logged In Successfully"}
+            return {"message": "Logged In Successfully", "status": True,'data': current_app.config["SESSION_ID"]}
         else:
-            return {"message": "Enter Valid Credentials"}
+            return {"message": "Enter Valid Credentials", "status": False}
 
     except Exception as e:
         return jsonify({'message': str(e), "status": False}), 404
 
 
-@auth_routes.post('/signout')
+@auth_routes.get('/signout')
 def signout():
     # Implement signout logic here
     session.pop('user')
@@ -262,7 +274,8 @@ def gallery_delete():
         return {"message": "Image Deleted Successfully", "status": True}
     except Exception as e:
         return {"message": str(e), "status": False}
-    
+
+
 @main_routes.get("/volunteers")
 def volunteers_show():
     try:
@@ -270,7 +283,7 @@ def volunteers_show():
 
         title = request.args.get('count')
         if title == "true":
-            data = db.events.find({"status":True})
+            data = db.events.find({"status": True})
             return {"message": data, "status": True}
         else:
 
@@ -281,10 +294,11 @@ def volunteers_show():
             return jsonify(data1)
 
     except Exception as e:
-        return {"message":str(e),"status":False}    
+        return {"message": str(e), "status": False}
 
 # This Route is for getting all the inputs required for applying as an volunteer in the organisation
 # This Route also gets image of the volunteer
+
 
 @main_routes.post("/volunteers")
 def volunteers_apply():
@@ -306,84 +320,89 @@ def volunteers_apply():
         data_id = db.volunteers.insert_one(finaldata).inserted_id
 
         if request.method == 'POST':
-                if 'file' not in request.files:
-                    flash('No file part')
-                file = request.files['file']
-                if file.filename == '':
-                    flash('No selected file')
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    new_image = finaldata["firstname"] + "_" + str(int(time.time())) + "_" + filename
-                    new_dest = current_app.config['UPLOAD_FOLDER'] + "/volunteers"
-                    if os.path.exists(new_dest):
-                        file.save(os.path.join(new_dest, new_image))
-                    else:
-                        os.makedirs(new_dest)
-                        file.save(os.path.join(new_dest, new_image))
-                
-                db.volunteers.update_one({"_id":data_id},{"$set" : {"image_name": new_image,"status":False}})
-        return {"Message":"Volunteer Applied Successfully","status":True}
+            if 'file' not in request.files:
+                flash('No file part')
+            file = request.files['file']
+            if file.filename == '':
+                flash('No selected file')
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                new_image = finaldata["firstname"] + "_" + \
+                    str(int(time.time())) + "_" + filename
+                new_dest = current_app.config['UPLOAD_FOLDER'] + "/volunteers"
+                if os.path.exists(new_dest):
+                    file.save(os.path.join(new_dest, new_image))
+                else:
+                    os.makedirs(new_dest)
+                    file.save(os.path.join(new_dest, new_image))
+
+            db.volunteers.update_one(
+                {"_id": data_id}, {"$set": {"image_name": new_image, "status": False}})
+        return {"Message": "Volunteer Applied Successfully", "status": True}
 
     except Exception as e:
         return {"message": str(e), "status": False}
-    
+
 # To Show All The Volunteers applied to the admin page
+
+
 @main_routes.get("/admin_volunteers")
 def admin_volunteers_show():
     try:
         if "user" not in session:
-            return {"message":"Please Login And Continue","status":False}
-        
+            return {"message": "Please Login And Continue", "status": False}
+
         db = current_app.config['MONGO']
         data = list(db.volunteers.find())
         for i, doc in enumerate(data):
             data[i]['_id'] = str(doc['_id'])
 
-        return jsonify(data)  
-         
+        return jsonify(data)
+
     except Exception as e:
-        return {"message":str(e),"status":False}
+        return {"message": str(e), "status": False}
 
 # This Route is used To approve The Volunteers who applied to be an volunteer
 # If the url comes with image id as paramter then the volunteer is approve
-    
+
+
 @main_routes.patch("/admin_volunteers")
 def admin_volunteers_approve():
     try:
         if "user" not in session:
-            return {"message":"Please Login And Continue","status":False}
-        
+            return {"message": "Please Login And Continue", "status": False}
+
         db = current_app.config['MONGO']
         image = request.args.get("image_id")
 
         if image:
-            db.volunteers.update_one({"image_name":image},{"$set" : {"status":True}})
-            return {"message":"Volunteer Approved Successfully","status":True}
+            db.volunteers.update_one({"image_name": image}, {
+                                     "$set": {"status": True}})
+            return {"message": "Volunteer Approved Successfully", "status": True}
         else:
-            return {"message":"Please Provide Image ID","status":False}
-
+            return {"message": "Please Provide Image ID", "status": False}
 
     except Exception as e:
-        return {"message":str(e),"status":False}
-    
+        return {"message": str(e), "status": False}
+
+
 @main_routes.delete("/admin_volunteers")
 def admin_volunteers_reject():
     try:
         if "user" not in session:
-            return {"message":"Please Login And Continue","status":False}
-        
+            return {"message": "Please Login And Continue", "status": False}
+
         db = current_app.config['MONGO']
         image = request.args.get("image_id")
 
         if image:
-            db.volunteers.delete_one({"image_name":image})
-            return {"message":"Volunteer Rejected Successfully","status":True}
+            db.volunteers.delete_one({"image_name": image})
+            return {"message": "Volunteer Rejected Successfully", "status": True}
         else:
-            return {"message":"Please Provide Image ID","status":False}
-
+            return {"message": "Please Provide Image ID", "status": False}
 
     except Exception as e:
-        return {"message":str(e),"status":False}
+        return {"message": str(e), "status": False}
 
 
 # This Function is to delete a single image from the gallery page based on the condition in the above

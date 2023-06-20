@@ -1,0 +1,6 @@
+Trust API routers
+
+http://localohst:8000
+
+ - /signin [POST]
+ - /signout [POST]
