@@ -2,5 +2,7 @@ Trust API routers
 
 http://localohst:8000
 
- - /signin [POST]
- - /signout [POST]
+ - /auth/usercheck  [GET]
+ - /auth/signin     [POST]
+ - /auth/signout    [POST]
+ 

@@ -1,3 +1,4 @@
+import os
 # Flask Configuration
 SECRET_KEY = 'dev'
 DEBUG = True
@@ -21,5 +22,5 @@ ADMIN_PASSWORD = 'admin'
 SESSION_ID = 'dev'
 
 # Image Config
-UPLOAD_FOLDER = '/home/bhadri/project/global_trust_api/app/public'
+UPLOAD_FOLDER = os.getcwd()+"/app/public"
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
